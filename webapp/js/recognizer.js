@@ -266,9 +266,13 @@ function stop() {
 	    post({status: "error", command: "stop", code: output});
 	else {
 	    recognizer.getHypseg(segmentation);
-	    post({hyp: Utf8Decode(recognizer.getHyp()),
-		  hypseg: segToArray(segmentation),
-		  final: true});
+	    post({
+	        hyp: Utf8Decode(recognizer.getHyp()),
+	        hypseg: segToArray(segmentation),
+	        hypScore: recognizer.getHypScore(),
+	        inSpeech: recognizer.getInSpeech(),
+	        uttStarted: recognizer.getUttStarted(),
+	        final: true});
 	}
     } else {
 	post({status: "error", command: "stop", code: "js-no-recognizer"});
@@ -286,8 +290,13 @@ function process(array) {
 	    post({status: "error", command: "process", code: output});
 	else {
 	    recognizer.getHypseg(segmentation);
-	    post({hyp: Utf8Decode(recognizer.getHyp()),
-		  hypseg: segToArray(segmentation)});
+	    post({
+          hyp: Utf8Decode(recognizer.getHyp()),
+          hypseg: segToArray(segmentation),
+          hypScore: recognizer.getHypScore(),
+          inSpeech: recognizer.getInSpeech(),
+          uttStarted: recognizer.getUttStarted()
+        });
 	    }
     } else {
 	post({status: "error", command: "process", code: "js-no-recognizer"});

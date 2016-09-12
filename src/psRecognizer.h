@@ -78,7 +78,11 @@ namespace pocketsphinxjs {
     ReturnType process(const std::vector<int16_t>&);
     std::string lookupWord(const std::string&);
     ~Recognizer();
-    
+
+    int32 getHypScore();
+    uint8 getInSpeech();
+    uint8 getUttStarted();
+
   private:
     ReturnType init(const Config&);
     bool isValidParameter(const std::string&, const std::string&);
@@ -97,7 +101,10 @@ namespace pocketsphinxjs {
     StringsSetType dictionaries;
     std::string default_language_model;
     std::string default_dictionary;
- 
+
+    int32 current_hyp_best_score;
+    uint8 utt_started;
+    uint8 in_speech;
   };
   
 } // namespace pocketsphinxjs
@@ -193,7 +200,12 @@ EMSCRIPTEN_BINDINGS(recognizer) {
     .function("start", &ps::Recognizer::start)
     .function("stop", &ps::Recognizer::stop)
     .function("lookupWord", &ps::Recognizer::lookupWord)
-    .function("process", &ps::Recognizer::process);
+    .function("process", &ps::Recognizer::process)
+
+    .function("getHypScore", &ps::Recognizer::getHypScore)
+    .function("getInSpeech", &ps::Recognizer::getInSpeech)
+    .function("getUttStarted", &ps::Recognizer::getUttStarted)
+    ;
 }
 
 #endif /* _PSRECOGNIZER_H_ */

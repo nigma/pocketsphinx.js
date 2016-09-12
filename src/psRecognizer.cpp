@@ -106,6 +106,7 @@ namespace pocketsphinxjs {
     if ((ps_start_utt(decoder) < 0) || (ps_start_stream(decoder) < 0)) {
       return RUNTIME_ERROR;
     }
+    utt_started = FALSE;
     current_hyp = "";
     is_recording = true;
     return SUCCESS;
@@ -116,7 +117,7 @@ namespace pocketsphinxjs {
     if (ps_end_utt(decoder) < 0) {
       return RUNTIME_ERROR;
     }
-    const char* h = ps_get_hyp(decoder, NULL);
+    const char* h = ps_get_hyp(decoder, &current_hyp_best_score);
     current_hyp = (h == NULL) ? "" : h;
     is_recording = false;
     return SUCCESS;
@@ -127,8 +128,25 @@ namespace pocketsphinxjs {
     if (buffer.size() == 0)
       return RUNTIME_ERROR;
     ps_process_raw(decoder, (short int *) &buffer[0], buffer.size(), 0, 0);
-    const char* h = ps_get_hyp(decoder, NULL);
-    current_hyp = (h == NULL) ? "" : h;
+
+    in_speech = ps_get_in_speech(decoder);
+    if (in_speech && !utt_started) {
+        utt_started = TRUE;
+    }
+
+    if (!in_speech && utt_started) {
+      /* speech -> silence transition, time to start new utterance  */
+      ps_end_utt(decoder);
+      const char* h = ps_get_hyp(decoder, &current_hyp_best_score);
+      current_hyp = (h == NULL) ? "" : h;
+
+      ps_start_utt(decoder);
+      utt_started = FALSE;
+    } else {
+      const char* h = ps_get_hyp(decoder, &current_hyp_best_score);
+      current_hyp = (h == NULL) ? "" : h;
+    }
+
     return SUCCESS;
   }
 
@@ -166,6 +184,18 @@ namespace pocketsphinxjs {
       itor = ps_seg_next(itor);
     }
     return SUCCESS;
+  }
+
+  int32 Recognizer::getHypScore() {
+    return current_hyp_best_score;
+  }
+
+  uint8 Recognizer::getInSpeech() {
+    return in_speech;
+  }
+
+  uint8 Recognizer::getUttStarted() {
+    return utt_started;
   }
 
   void Recognizer::cleanup() {
